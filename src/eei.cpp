@@ -388,12 +388,7 @@ inline int64_t maxCallGas(int64_t gas) {
       takeInterfaceGas(GasSchedule::extcode + GasSchedule::copy * ((uint64_t(length) + 31) / 32));
 
       evmc_address address = loadUint160(addressOffset);
-      // FIXME: optimise this so no vector needs to be created
-      vector<uint8_t> codeBuffer(length);
-      size_t numCopied = context->fn_table->copy_code(context, &address, codeOffset, codeBuffer.data(), codeBuffer.size());
-      ensureCondition(numCopied == length, InvalidMemoryAccess, "Out of bounds (source) memory copy");
-
-      storeMemory(codeBuffer, 0, resultOffset, length);
+      heraAssert(context->fn_table->copy_code(context, &address, codeOffset, reinterpret_cast<uint8_t*>(memory.rawbuffer(resultOffset, length)), length) == length, "copy_code failed");
 
       return Literal();
     }
