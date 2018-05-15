@@ -388,7 +388,9 @@ inline int64_t maxCallGas(int64_t gas) {
       takeInterfaceGas(GasSchedule::extcode + GasSchedule::copy * ((uint64_t(length) + 31) / 32));
 
       evmc_address address = loadUint160(addressOffset);
-      heraAssert(context->fn_table->copy_code(context, &address, codeOffset, reinterpret_cast<uint8_t*>(memory.rawbuffer(resultOffset, length)), length) == length, "copy_code failed");
+      uint8_t* codeBuffer = reinterpret_cast<uint8_t*>(memory.rawbuffer(resultOffset, length));
+      size_t numCopied = context->fn_table->copy_code(context, &address, codeOffset, codeBuffer, length);
+      heraAssert(numCopied == length, "copy_code failed");
 
       return Literal();
     }
