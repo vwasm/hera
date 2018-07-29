@@ -52,7 +52,7 @@ struct ShellExternalInterface : ModuleInstance::ExternalInterface {
    public:
     Memory() {}
     char* rawbuffer(size_t offset, size_t length) {
-      heraAssert(size() <= (offset + length), "Memory is shorter than requested segment"); // "memory: requested raw buffer is too short"
+      ensureCondition(size() <= (offset + length), InvalidMemoryAccess, "Memory is shorter than requested segment"); // "memory: requested raw buffer is too short"
       return &memory[offset];
     }
     size_t size() const { return memory.size(); }

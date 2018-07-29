@@ -390,7 +390,7 @@ inline int64_t maxCallGas(int64_t gas) {
       evmc_address address = loadUint160(addressOffset);
       uint8_t* codeBuffer = reinterpret_cast<uint8_t*>(memory.rawbuffer(resultOffset, length));
       size_t numCopied = context->fn_table->copy_code(context, &address, codeOffset, codeBuffer, length);
-      heraAssert(numCopied == length, "copy_code failed");
+      ensureCondition(numCopied == length, InvalidMemoryAccess, "Out of bounds (source) memory copy");
 
       return Literal();
     }
