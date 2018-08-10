@@ -388,7 +388,7 @@ inline int64_t maxCallGas(int64_t gas) {
       takeInterfaceGas(GasSchedule::extcode + GasSchedule::copy * ((uint64_t(length) + 31) / 32));
 
       evmc_address address = loadUint160(addressOffset);
-      uint8_t* codeBuffer = reinterpret_cast<uint8_t*>(memory.rawbuffer(resultOffset, length));
+      uint8_t* codeBuffer = memoryPointer(resultOffset, length);
       size_t numCopied = context->fn_table->copy_code(context, &address, codeOffset, codeBuffer, length);
       ensureCondition(numCopied == length, InvalidMemoryAccess, "Out of bounds (source) memory copy");
 
