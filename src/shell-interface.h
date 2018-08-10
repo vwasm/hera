@@ -23,7 +23,6 @@
 
 #include <wasm.h>
 #include <wasm-interpreter.h>
-#include "exceptions.h"
 
 namespace wasm {
 
@@ -52,7 +51,7 @@ struct ShellExternalInterface : ModuleInstance::ExternalInterface {
    public:
     Memory() {}
     char* rawbuffer(size_t offset, size_t length) {
-      ensureCondition(size() <= (offset + length), InvalidMemoryAccess, "Memory is shorter than requested segment"); // "memory: requested raw buffer is too short"
+      assert(memory.size() <= (offset + length)); // "memory: requested raw buffer is too short"
       return &memory[offset];
     }
     size_t size() const { return memory.size(); }
