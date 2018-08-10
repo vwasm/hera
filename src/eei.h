@@ -83,7 +83,7 @@ private:
   inline uint8_t memoryGet(size_t offset) { return memory.get<uint8_t>(offset); }
   inline uint8_t* memoryPointer(size_t offset, size_t length) {
     ensureCondition(memorySize() <= (offset + length), InvalidMemoryAccess, "Memory is shorter than requested segment"); // "memory: requested raw buffer is too short"
-    return reinterpret_cast<uint8_t*>(memory.rawbuffer(offset, length));
+    return reinterpret_cast<uint8_t*>(memory.rawpointer(offset));
   }
 
   void ensureSourceMemoryBounds(uint32_t offset, uint32_t length);

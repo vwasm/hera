@@ -51,7 +51,7 @@ struct ShellExternalInterface : ModuleInstance::ExternalInterface {
    public:
     Memory() {}
     // Gives no guarantee about the length of the memory. Caller needs to ensure that.
-    char* rawbuffer(size_t offset) {
+    char* rawpointer(size_t offset) {
       return &memory[offset];
     }
     size_t size() const { return memory.size(); }
