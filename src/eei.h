@@ -81,7 +81,10 @@ private:
   inline size_t memorySize() const { return memory.size(); }
   inline void memorySet(size_t offset, uint8_t value) { memory.set<uint8_t>(offset, value); }
   inline uint8_t memoryGet(size_t offset) { return memory.get<uint8_t>(offset); }
-  inline uint8_t* memoryPointer(size_t offset, size_t length) { return reinterpret_cast<uint8_t*>(memory.rawbuffer(offset, length)); }
+  inline uint8_t* memoryPointer(size_t offset, size_t length) {
+    ensureCondition(memorySize() <= (offset + length), InvalidMemoryAccess, "Memory is shorter than requested segment"); // "memory: requested raw buffer is too short"
+    return reinterpret_cast<uint8_t*>(memory.rawbuffer(offset, length));
+  }
 
   void ensureSourceMemoryBounds(uint32_t offset, uint32_t length);
   void loadMemory(uint32_t srcOffset, uint8_t *dst, size_t length);
