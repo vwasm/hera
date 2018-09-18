@@ -58,7 +58,7 @@ namespace hera {
   {
       evmc_uint256be path = loadBytes32(pathOffset);
 
-      HERA_DEBUG << "DEBUG printStorage" << (useHex ? "Hex" : "") << "(0x" << hex;
+      HERA_DEBUG << depthToString() << " DEBUG printStorage" << (useHex ? "Hex" : "") << "(0x" << hex;
 
       // Print out the path
       for (uint8_t b: path.bytes)
@@ -86,7 +86,7 @@ namespace hera {
 
   void EthereumInterface::debugEvmTrace(uint32_t pc, int32_t opcode, uint32_t cost, int32_t sp)
   {
-      HERA_DEBUG << "evmTrace\n";
+      HERA_DEBUG << depthToString() << " evmTrace\n";
 
       static constexpr int stackItemSize = sizeof(evmc_uint256be);
       heraAssert(sp <= (1024 * stackItemSize), "EVM stack pointer out of bounds.");
@@ -116,7 +116,7 @@ namespace hera {
 
   void EthereumInterface::eeiUseGas(int64_t gas)
   {
-      HERA_DEBUG << "useGas " << gas << "\n";
+      HERA_DEBUG << depthToString() << " useGas " << gas << "\n";
 
       ensureCondition(gas >= 0, ArgumentOutOfRange, "Negative gas supplied.");
 
@@ -125,7 +125,7 @@ namespace hera {
 
   int64_t EthereumInterface::eeiGetGasLeft()
   {
-      HERA_DEBUG << "getGasLeft\n";
+      HERA_DEBUG << depthToString() << " getGasLeft\n";
 
       static_assert(is_same<decltype(m_result.gasLeft), int64_t>::value, "int64_t type expected");
 
@@ -136,7 +136,7 @@ namespace hera {
 
   void EthereumInterface::eeiGetAddress(uint32_t resultOffset)
   {
-      HERA_DEBUG << "getAddress " << hex << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getAddress " << hex << resultOffset << dec << "\n";
 
       storeAddress(m_msg.destination, resultOffset);
 
@@ -145,7 +145,7 @@ namespace hera {
 
   void EthereumInterface::eeiGetExternalBalance(uint32_t addressOffset, uint32_t resultOffset)
   {
-      HERA_DEBUG << "getExternalBalance " << hex << addressOffset << " " << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getExternalBalance " << hex << addressOffset << " " << resultOffset << dec << "\n";
 
       evmc_address address = loadAddress(addressOffset);
       evmc_uint256be result;
@@ -157,7 +157,7 @@ namespace hera {
 
   uint32_t EthereumInterface::eeiGetBlockHash(uint64_t number, uint32_t resultOffset)
   {
-      HERA_DEBUG << "getBlockHash " << hex << number << " " << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getBlockHash " << hex << number << " " << resultOffset << dec << "\n";
 
       evmc_uint256be blockhash;
 
@@ -174,7 +174,7 @@ namespace hera {
 
   uint32_t EthereumInterface::eeiGetCallDataSize()
   {
-      HERA_DEBUG << "getCallDataSize\n";
+      HERA_DEBUG << depthToString() << " getCallDataSize\n";
 
       takeInterfaceGas(GasSchedule::base);
 
@@ -183,7 +183,7 @@ namespace hera {
 
   void EthereumInterface::eeiCallDataCopy(uint32_t resultOffset, uint32_t dataOffset, uint32_t length)
   {
-      HERA_DEBUG << "callDataCopy " << hex << resultOffset << " " << dataOffset << " " << length << dec << "\n";
+      HERA_DEBUG << depthToString() << " callDataCopy " << hex << resultOffset << " " << dataOffset << " " << length << dec << "\n";
 
       safeChargeDataCopy(length, GasSchedule::verylow);
 
@@ -193,7 +193,7 @@ namespace hera {
 
   void EthereumInterface::eeiGetCaller(uint32_t resultOffset)
   {
-      HERA_DEBUG << "getCaller " << hex << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getCaller " << hex << resultOffset << dec << "\n";
 
       takeInterfaceGas(GasSchedule::base);
       storeAddress(m_msg.sender, resultOffset);
@@ -201,7 +201,7 @@ namespace hera {
 
   void EthereumInterface::eeiGetCallValue(uint32_t resultOffset)
   {
-      HERA_DEBUG << "getCallValue " << hex << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getCallValue " << hex << resultOffset << dec << "\n";
 
       takeInterfaceGas(GasSchedule::base);
       storeUint128(m_msg.value, resultOffset);
@@ -209,7 +209,7 @@ namespace hera {
 
   void EthereumInterface::eeiCodeCopy(uint32_t resultOffset, uint32_t codeOffset, uint32_t length)
   {
-      HERA_DEBUG << "codeCopy " << hex << resultOffset << " " << codeOffset << " " << length << dec << "\n";
+      HERA_DEBUG << depthToString() << " codeCopy " << hex << resultOffset << " " << codeOffset << " " << length << dec << "\n";
 
       safeChargeDataCopy(length, GasSchedule::verylow);
 
@@ -218,7 +218,7 @@ namespace hera {
 
   uint32_t EthereumInterface::eeiGetCodeSize()
   {
-      HERA_DEBUG << "getCodeSize\n";
+      HERA_DEBUG << depthToString() << " getCodeSize\n";
 
       takeInterfaceGas(GasSchedule::base);
 
@@ -227,7 +227,7 @@ namespace hera {
 
   void EthereumInterface::eeiExternalCodeCopy(uint32_t addressOffset, uint32_t resultOffset, uint32_t codeOffset, uint32_t length)
   {
-      HERA_DEBUG << "externalCodeCopy " << hex << addressOffset << " " << resultOffset << " " << codeOffset << " " << length << dec << "\n";
+      HERA_DEBUG << depthToString() << " externalCodeCopy " << hex << addressOffset << " " << resultOffset << " " << codeOffset << " " << length << dec << "\n";
 
       safeChargeDataCopy(length, GasSchedule::extcode);
 
@@ -242,7 +242,7 @@ namespace hera {
 
   uint32_t EthereumInterface::eeiGetExternalCodeSize(uint32_t addressOffset)
   {
-      HERA_DEBUG << "getExternalCodeSize " << hex << addressOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getExternalCodeSize " << hex << addressOffset << dec << "\n";
 
       evmc_address address = loadAddress(addressOffset);
       takeInterfaceGas(GasSchedule::extcode);
@@ -253,7 +253,7 @@ namespace hera {
 
   void EthereumInterface::eeiGetBlockCoinbase(uint32_t resultOffset)
   {
-      HERA_DEBUG << "getBlockCoinbase " << hex << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getBlockCoinbase " << hex << resultOffset << dec << "\n";
 
       takeInterfaceGas(GasSchedule::base);
       storeAddress(m_tx_context.block_coinbase, resultOffset);
@@ -261,7 +261,7 @@ namespace hera {
 
   void EthereumInterface::eeiGetBlockDifficulty(uint32_t offset)
   {
-      HERA_DEBUG << "getBlockDifficulty " << hex << offset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getBlockDifficulty " << hex << offset << dec << "\n";
 
       takeInterfaceGas(GasSchedule::base);
       storeUint256(m_tx_context.block_difficulty, offset);
@@ -269,7 +269,7 @@ namespace hera {
 
   int64_t EthereumInterface::eeiGetBlockGasLimit()
   {
-      HERA_DEBUG << "getBlockGasLimit\n";
+      HERA_DEBUG << depthToString() << " getBlockGasLimit\n";
 
       takeInterfaceGas(GasSchedule::base);
 
@@ -280,7 +280,7 @@ namespace hera {
 
   void EthereumInterface::eeiGetTxGasPrice(uint32_t valueOffset)
   {
-      HERA_DEBUG << "getTxGasPrice " << hex << valueOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getTxGasPrice " << hex << valueOffset << dec << "\n";
 
       takeInterfaceGas(GasSchedule::base);
       storeUint128(m_tx_context.tx_gas_price, valueOffset);
@@ -288,7 +288,7 @@ namespace hera {
 
   void EthereumInterface::eeiLog(uint32_t dataOffset, uint32_t length, uint32_t numberOfTopics, uint32_t topic1, uint32_t topic2, uint32_t topic3, uint32_t topic4)
   {
-      HERA_DEBUG << "log " << hex << dataOffset << " " << length << " " << numberOfTopics << dec << "\n";
+      HERA_DEBUG << depthToString() << " log " << hex << dataOffset << " " << length << " " << numberOfTopics << dec << "\n";
 
       ensureCondition(!(m_msg.flags & EVMC_STATIC), StaticModeViolation, "log");
 
@@ -316,7 +316,7 @@ namespace hera {
 
   int64_t EthereumInterface::eeiGetBlockNumber()
   {
-      HERA_DEBUG << "getBlockNumber\n";
+      HERA_DEBUG << depthToString() << " getBlockNumber\n";
 
       takeInterfaceGas(GasSchedule::base);
 
@@ -327,7 +327,7 @@ namespace hera {
 
   int64_t EthereumInterface::eeiGetBlockTimestamp()
   {
-      HERA_DEBUG << "getBlockTimestamp\n";
+      HERA_DEBUG << depthToString() << " getBlockTimestamp\n";
 
       takeInterfaceGas(GasSchedule::base);
 
@@ -338,7 +338,7 @@ namespace hera {
 
   void EthereumInterface::eeiGetTxOrigin(uint32_t resultOffset)
   {
-      HERA_DEBUG << "getTxOrigin " << hex << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " getTxOrigin " << hex << resultOffset << dec << "\n";
 
       takeInterfaceGas(GasSchedule::base);
       storeAddress(m_tx_context.tx_origin, resultOffset);
@@ -346,7 +346,7 @@ namespace hera {
 
   void EthereumInterface::eeiStorageStore(uint32_t pathOffset, uint32_t valueOffset)
   {
-      HERA_DEBUG << "storageStore " << hex << pathOffset << " " << valueOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " storageStore " << hex << pathOffset << " " << valueOffset << dec << "\n";
 
       ensureCondition(!(m_msg.flags & EVMC_STATIC), StaticModeViolation, "storageStore");
 
@@ -368,7 +368,7 @@ namespace hera {
 
   void EthereumInterface::eeiStorageLoad(uint32_t pathOffset, uint32_t resultOffset)
   {
-      HERA_DEBUG << "storageLoad " << hex << pathOffset << " " << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " storageLoad " << hex << pathOffset << " " << resultOffset << dec << "\n";
 
       evmc_uint256be path = loadBytes32(pathOffset);
       evmc_uint256be result;
@@ -394,7 +394,7 @@ namespace hera {
 
   uint32_t EthereumInterface::eeiGetReturnDataSize()
   {
-      HERA_DEBUG << "getReturnDataSize\n";
+      HERA_DEBUG << depthToString() << " getReturnDataSize\n";
 
       takeInterfaceGas(GasSchedule::base);
       return static_cast<uint32_t>(m_lastReturnData.size());
@@ -402,7 +402,7 @@ namespace hera {
 
   void EthereumInterface::eeiReturnDataCopy(uint32_t dataOffset, uint32_t offset, uint32_t size)
   {
-      HERA_DEBUG << "returnDataCopy " << hex << dataOffset << " " << offset << " " << size << dec << "\n";
+      HERA_DEBUG << depthToString() << " returnDataCopy " << hex << dataOffset << " " << offset << " " << size << dec << "\n";
 
       safeChargeDataCopy(size, GasSchedule::verylow);
       storeMemory(m_lastReturnData, offset, dataOffset, size);
@@ -537,7 +537,7 @@ namespace hera {
 
   uint32_t EthereumInterface::eeiCreate(uint32_t valueOffset, uint32_t dataOffset, uint32_t length, uint32_t resultOffset)
   {
-      HERA_DEBUG << "create " << hex << valueOffset << " " << dataOffset << " " << length << dec << " " << resultOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " create " << hex << valueOffset << " " << dataOffset << " " << length << dec << " " << resultOffset << dec << "\n";
 
       ensureCondition(!(m_msg.flags & EVMC_STATIC), StaticModeViolation, "create");
 
@@ -606,7 +606,7 @@ namespace hera {
 
   void EthereumInterface::eeiSelfDestruct(uint32_t addressOffset)
   {
-      HERA_DEBUG << "selfDestruct " << hex << addressOffset << dec << "\n";
+      HERA_DEBUG << depthToString() << " selfDestruct " << hex << addressOffset << dec << "\n";
 
       ensureCondition(!(m_msg.flags & EVMC_STATIC), StaticModeViolation, "selfDestruct");
 

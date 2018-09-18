@@ -130,6 +130,9 @@ protected:
 
 private:
   void eeiRevertOrFinish(bool revert, uint32_t offset, uint32_t size);
+  inline std::string depthToString() const {
+    return std::string("[") + std::to_string(m_msg.depth) + "]";
+  }
 
   // Helpers methods
 
