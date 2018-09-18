@@ -381,7 +381,7 @@ namespace hera {
 
   void EthereumInterface::eeiRevertOrFinish(bool revert, uint32_t offset, uint32_t size)
   {
-      HERA_DEBUG << (revert ? "revert " : "finish ") << hex << offset << " " << size << dec << "\n";
+      HERA_DEBUG << depthToString() << " " << (revert ? "revert " : "finish ") << hex << offset << " " << size << dec << "\n";
 
       ensureSourceMemoryBounds(offset, size);
       m_result.returnValue = vector<uint8_t>(size);
@@ -453,6 +453,7 @@ namespace hera {
       }
 
       HERA_DEBUG <<
+        depthToString() << " " <<
         methodName << " " << hex <<
         gas << " " <<
         addressOffset << " " <<
