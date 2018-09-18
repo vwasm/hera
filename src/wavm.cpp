@@ -264,6 +264,8 @@ ExecutionResult WavmEngine::internalExecute(
       } catch (EndExecution const&) {
         // This exception is ignored here because we consider it to be a success.
         // It is only a clutch for POSIX style exit()
+      } catch (HeraException const& e) {
+        HERA_DEBUG << "caught hera exception? " << e.what();
       }
     },
     [&](Runtime::Exception&& exception) {
