@@ -267,6 +267,7 @@ ExecutionResult WavmEngine::internalExecute(
       }
     },
     [&](Runtime::Exception&& exception) {
+      HERA_DEBUG << "WAVM runtime exception: " << Runtime::describeException(exception);
       // FIXME: decide if each of the exception fit into VMTrap/InternalError
       ensureCondition(false, VMTrap, Runtime::describeException(exception));
     }
