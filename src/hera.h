@@ -1,5 +1,5 @@
 /*
- * Hera VM: eWASM virtual machine conforming to the Ethereum VM C API
+ * Hera VM: vWASM virtual machine conforming to the Vapory VM C API
  *
  * Copyright (c) 2016 Alex Beregszaszi
  *
@@ -29,9 +29,9 @@
 extern "C" {
 #endif
 
-struct evm_instance;
+struct vvm_instance;
 
-struct evm_instance* hera_create(void);
+struct vvm_instance* hera_create(void);
 
 #if __cplusplus
 }

@@ -1,10 +1,10 @@
 
-get_filename_component(evm_include_dir .. ABSOLUTE)
+get_filename_component(vvm_include_dir .. ABSOLUTE)
 
 add_library(hera
     eei.cpp eei.h
     hera.cpp hera.h
-    ${evm_include_dir}/evm.h
+    ${vvm_include_dir}/vvm.h
 )
 
 option(HERA_DEBUGGING "Display debugging messages during execution." ON)
@@ -17,5 +17,5 @@ if(HERA_METERING_CONTRACT)
   target_compile_definitions(hera PRIVATE HERA_METERING_CONTRACT=1)
 endif()
 
-target_include_directories(hera PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${evm_include_dir})
+target_include_directories(hera PUBLIC ${CMAKE_CURRENT_SOURCE_DIR} PRIVATE ${vvm_include_dir})
 target_link_libraries(hera PRIVATE binaryen::binaryen)

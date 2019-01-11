@@ -1,5 +1,5 @@
 /*
- * Hera VM: eWASM virtual machine conforming to the Ethereum VM C API
+ * Hera VM: vWASM virtual machine conforming to the Vapory VM C API
  *
  * Copyright (c) 2016 Alex Beregszaszi
  *
@@ -44,7 +44,7 @@ struct NullStream {
 
 namespace HeraVM {
 #if HERA_DEBUGGING
-  Literal EthereumInterface::callDebugImport(Import *import, LiteralList& arguments) {
+  Literal VaporyInterface::callDebugImport(Import *import, LiteralList& arguments) {
     heraAssert(import->module == Name("debug"), "Import namespace error.");
 
     if (import->base == Name("print32")) {
@@ -95,7 +95,7 @@ namespace HeraVM {
     if (import->base == Name("printStorage") || import->base == Name("printStorageHex")) {
       uint32_t pathOffset = arguments[0].geti32();
 
-      evm_uint256be path = loadUint256(pathOffset);
+      vvm_uint256be path = loadUint256(pathOffset);
 
       bool useHex = import->base == Name("printStorageHex");
 
@@ -107,7 +107,7 @@ namespace HeraVM {
 
       HERA_DEBUG << "): " << dec;
 
-      evm_uint256be result;
+      vvm_uint256be result;
       context->fn_table->get_storage(&result, context, &msg.destination, &path);
 
       if (useHex)
@@ -131,14 +131,14 @@ namespace HeraVM {
   }
 #endif
 
-  Literal EthereumInterface::callImport(Import *import, LiteralList& arguments) {
+  Literal VaporyInterface::callImport(Import *import, LiteralList& arguments) {
 #if HERA_DEBUGGING
     if (import->module == Name("debug"))
       // Reroute to debug namespace
       return callDebugImport(import, arguments);
 #endif
 
-    heraAssert(import->module == Name("ethereum"), "Only imports from the 'ethereum' namespace are allowed.");
+    heraAssert(import->module == Name("vapory"), "Only imports from the 'vapory' namespace are allowed.");
 
     if (import->base == Name("useGas")) {
       uint64_t gas = arguments[0].geti64();
@@ -173,8 +173,8 @@ namespace HeraVM {
 
       HERA_DEBUG << "getBalance " << hex << addressOffset << " " << resultOffset << dec << "\n";
 
-      evm_address address = loadUint160(addressOffset);
-      evm_uint256be result;
+      vvm_address address = loadUint160(addressOffset);
+      vvm_uint256be result;
       context->fn_table->get_balance(&result, context, &address);
       storeUint128(result, resultOffset);
 
@@ -187,7 +187,7 @@ namespace HeraVM {
 
       HERA_DEBUG << "getBlockHash " << hex << number << " " << resultOffset << dec << "\n";
 
-      evm_uint256be blockhash;
+      vvm_uint256be blockhash;
       context->fn_table->get_block_hash(&blockhash, context, number);
       storeUint256(blockhash, resultOffset);
 
@@ -258,7 +258,7 @@ namespace HeraVM {
 
       HERA_DEBUG << "externalCodeCopy " << hex << addressOffset << " " << resultOffset << " " << codeOffset << " " << length << dec << "\n";
 
-      evm_address address = loadUint160(addressOffset);
+      vvm_address address = loadUint160(addressOffset);
       const uint8_t *code;
       size_t code_size = context->fn_table->get_code(&code, context, &address);
 
@@ -275,7 +275,7 @@ namespace HeraVM {
 
       HERA_DEBUG << "getExternalCodeSize " << hex << addressOffset << dec << "\n";
 
-      evm_address address = loadUint160(addressOffset);
+      vvm_address address = loadUint160(addressOffset);
       size_t code_size = context->fn_table->get_code(NULL, context, &address);
 
       return Literal(static_cast<uint32_t>(code_size));
@@ -286,7 +286,7 @@ namespace HeraVM {
 
       HERA_DEBUG << "getBlockCoinbase " << hex << resultOffset << dec << "\n";
 
-      evm_tx_context tx_context;
+      vvm_tx_context tx_context;
       context->fn_table->get_tx_context(&tx_context, context);
       storeUint160(tx_context.block_coinbase, resultOffset);
 
@@ -298,7 +298,7 @@ namespace HeraVM {
 
       HERA_DEBUG << "getBlockDifficulty " << hex << offset << dec << "\n";
 
-      evm_tx_context tx_context;
+      vvm_tx_context tx_context;
       context->fn_table->get_tx_context(&tx_context, context);
       storeUint256(tx_context.block_difficulty, offset);
 
@@ -308,7 +308,7 @@ namespace HeraVM {
     if (import->base == Name("getBlockGasLimit")) {
       HERA_DEBUG << "getBlockGasLimit\n";
 
-      evm_tx_context tx_context;
+      vvm_tx_context tx_context;
       context->fn_table->get_tx_context(&tx_context, context);
 
       static_assert(is_same<decltype(tx_context.block_gas_limit), int64_t>::value, "int64_t type expected");
@@ -320,7 +320,7 @@ namespace HeraVM {
 
       HERA_DEBUG << "getTxGasPrice " << hex << valueOffset << dec << "\n";
 
-      evm_tx_context tx_context;
+      vvm_tx_context tx_context;
       context->fn_table->get_tx_context(&tx_context, context);
       storeUint128(tx_context.tx_gas_price, valueOffset);
 
@@ -334,11 +334,11 @@ namespace HeraVM {
 
       HERA_DEBUG << "log " << hex << dataOffset << " " << length << " " << numberOfTopics << dec << "\n";
 
-      heraAssert(!(msg.flags & EVM_STATIC), "\"log\" attempted in static mode");
+      heraAssert(!(msg.flags & VVM_STATIC), "\"log\" attempted in static mode");
 
       heraAssert(numberOfTopics <= 4, "Too many topics specified");
 
-      evm_uint256be topics[numberOfTopics];
+      vvm_uint256be topics[numberOfTopics];
       for (size_t i = 0; i < numberOfTopics; ++i) {
         uint32_t topicOffset = arguments[3 + i].geti32();
         topics[i] = loadUint256(topicOffset);
@@ -355,7 +355,7 @@ namespace HeraVM {
     if (import->base == Name("getBlockNumber")) {
       HERA_DEBUG << "getBlockNumber\n";
 
-      evm_tx_context tx_context;
+      vvm_tx_context tx_context;
       context->fn_table->get_tx_context(&tx_context, context);
 
       static_assert(is_same<decltype(tx_context.block_number), int64_t>::value, "int64_t type expected");
@@ -365,7 +365,7 @@ namespace HeraVM {
     if (import->base == Name("getBlockTimestamp")) {
       HERA_DEBUG << "getBlockTimestamp\n";
 
-      evm_tx_context tx_context;
+      vvm_tx_context tx_context;
       context->fn_table->get_tx_context(&tx_context, context);
 
       static_assert(is_same<decltype(tx_context.block_timestamp), int64_t>::value, "int64_t type expected");
@@ -377,7 +377,7 @@ namespace HeraVM {
 
       HERA_DEBUG << "getTxOrigin " << hex << resultOffset << dec << "\n";
 
-      evm_tx_context tx_context;
+      vvm_tx_context tx_context;
       context->fn_table->get_tx_context(&tx_context, context);
       storeUint160(tx_context.tx_origin, resultOffset);
 
@@ -390,12 +390,12 @@ namespace HeraVM {
 
       HERA_DEBUG << "storageStore " << hex << pathOffset << " " << valueOffset << dec << "\n";
 
-      heraAssert(!(msg.flags & EVM_STATIC), "\"storageStore\" attempted in static mode");
+      heraAssert(!(msg.flags & VVM_STATIC), "\"storageStore\" attempted in static mode");
 
-      evm_uint256be path = loadUint256(pathOffset);
-      evm_uint256be value = loadUint256(valueOffset);
+      vvm_uint256be path = loadUint256(pathOffset);
+      vvm_uint256be value = loadUint256(valueOffset);
 
-      evm_uint256be current;
+      vvm_uint256be current;
       context->fn_table->get_storage(&current, context, &msg.destination, &path);
 
       // We do not need to take care about the delete case (gas refund), the client does it.
@@ -416,9 +416,9 @@ namespace HeraVM {
 
       HERA_DEBUG << "storageLoad " << hex << pathOffset << " " << resultOffset << dec << "\n";
 
-      evm_uint256be path = loadUint256(pathOffset);
+      vvm_uint256be path = loadUint256(pathOffset);
 
-      evm_uint256be result;
+      vvm_uint256be result;
       context->fn_table->get_storage(&result, context, &msg.destination, &path);
 
       storeUint256(result, resultOffset);
@@ -471,9 +471,9 @@ namespace HeraVM {
       uint32_t dataOffset;
       uint32_t dataLength;
 
-      heraAssert((msg.flags & ~EVM_STATIC) == 0, "Unknown flags not supported.");
+      heraAssert((msg.flags & ~VVM_STATIC) == 0, "Unknown flags not supported.");
 
-      evm_message call_message;
+      vvm_message call_message;
       call_message.destination = loadUint160(addressOffset);
       call_message.flags = msg.flags;
       call_message.code_hash = {};
@@ -487,10 +487,10 @@ namespace HeraVM {
 
         call_message.sender = msg.destination;
         call_message.value = loadUint128(valueOffset);
-        call_message.kind = (import->base == Name("callCode")) ? EVM_CALLCODE : EVM_CALL;
+        call_message.kind = (import->base == Name("callCode")) ? VVM_CALLCODE : VVM_CALL;
 
         if (import->base == Name("call") && !isZeroUint256(call_message.value))
-          heraAssert(!(msg.flags & EVM_STATIC), "\"call\" with value transfer attempted in static mode");
+          heraAssert(!(msg.flags & VVM_STATIC), "\"call\" with value transfer attempted in static mode");
 
         ensureSenderBalance(call_message.value);
       } else {
@@ -501,12 +501,12 @@ namespace HeraVM {
         if (import->base == Name("callDelegate")) {
           call_message.sender = msg.sender;
           call_message.value = msg.value;
-          call_message.kind = EVM_DELEGATECALL;
+          call_message.kind = VVM_DELEGATECALL;
         } else if (import->base == Name("callStatic")) {
           call_message.sender = msg.destination;
           call_message.value = {};
-          call_message.kind = EVM_CALL;
-          call_message.flags |= EVM_STATIC;
+          call_message.kind = VVM_CALL;
+          call_message.flags |= VVM_STATIC;
         }
       }
 
@@ -528,7 +528,7 @@ namespace HeraVM {
         call_message.input_size = 0;
       }
 
-      evm_result call_result;
+      vvm_result call_result;
       context->fn_table->call(&call_result, context, &call_message);
 
       if (call_result.output_data) {
@@ -541,9 +541,9 @@ namespace HeraVM {
         call_result.release(&call_result);
 
       switch (call_result.status_code) {
-      case EVM_SUCCESS:
+      case VVM_SUCCESS:
         return Literal(uint32_t(0));
-      case EVM_REVERT:
+      case VVM_REVERT:
         return Literal(uint32_t(2));
       default:
         return Literal(uint32_t(1));
@@ -558,9 +558,9 @@ namespace HeraVM {
 
       HERA_DEBUG << "create " << hex << valueOffset << " " << dataOffset << " " << length << dec << " " << resultOffset << dec << "\n";
 
-      heraAssert(!(msg.flags & EVM_STATIC), "\"create\" attempted in static mode");
+      heraAssert(!(msg.flags & VVM_STATIC), "\"create\" attempted in static mode");
 
-      evm_message create_message;
+      vvm_message create_message;
 
       create_message.destination = {};
       create_message.sender = msg.destination;
@@ -581,12 +581,12 @@ namespace HeraVM {
       create_message.code_hash = {};
       create_message.gas = result.gasLeft - (result.gasLeft / 64);
       create_message.depth = msg.depth + 1;
-      create_message.kind = EVM_CREATE;
+      create_message.kind = VVM_CREATE;
       create_message.flags = 0;
 
-      evm_result create_result;
+      vvm_result create_result;
       context->fn_table->call(&create_result, context, &create_message);
-      if (create_result.status_code == EVM_SUCCESS) {
+      if (create_result.status_code == VVM_SUCCESS) {
         storeUint160(create_result.create_address, resultOffset);
         lastReturnData.clear();
       } else if (create_result.output_data) {
@@ -599,9 +599,9 @@ namespace HeraVM {
         create_result.release(&create_result);
 
       switch (create_result.status_code) {
-      case EVM_SUCCESS:
+      case VVM_SUCCESS:
         return Literal(uint32_t(0));
-      case EVM_REVERT:
+      case VVM_REVERT:
         return Literal(uint32_t(2));
       default:
         return Literal(uint32_t(1));
@@ -613,9 +613,9 @@ namespace HeraVM {
 
       HERA_DEBUG << "selfDestruct " << hex << addressOffset << dec << "\n";
 
-      heraAssert(!(msg.flags & EVM_STATIC), "\"selfDestruct\" attempted in static mode");
+      heraAssert(!(msg.flags & VVM_STATIC), "\"selfDestruct\" attempted in static mode");
 
-      evm_address address = loadUint160(addressOffset);
+      vvm_address address = loadUint160(addressOffset);
 
       context->fn_table->selfdestruct(context, &msg.destination, &address);
 
@@ -625,7 +625,7 @@ namespace HeraVM {
     heraAssert(false, string("Unsupported import called: ") + import->module.str + "::" + import->base.str);
   }
 
-  void EthereumInterface::takeGas(uint64_t gas)
+  void VaporyInterface::takeGas(uint64_t gas)
   {
     if (gas > result.gasLeft) {
       HERA_DEBUG << "Out of gas :(\n";
@@ -639,7 +639,7 @@ namespace HeraVM {
    * Memory Operations
    */
 
-  void EthereumInterface::loadMemory(uint32_t srcOffset, uint8_t *dst, size_t length)
+  void VaporyInterface::loadMemory(uint32_t srcOffset, uint8_t *dst, size_t length)
   {
     heraAssert((srcOffset + length) > srcOffset, "Out of bounds (source) memory copy.");
     
@@ -651,7 +651,7 @@ namespace HeraVM {
     }
   }
 
-  void EthereumInterface::loadMemory(uint32_t srcOffset, vector<uint8_t> & dst, size_t length)
+  void VaporyInterface::loadMemory(uint32_t srcOffset, vector<uint8_t> & dst, size_t length)
   {
     heraAssert((srcOffset + length) >= srcOffset, "Out of bounds (source) memory copy.");
     heraAssert(dst.size() >= length, "Out of bounds (destination) memory copy.");
@@ -664,7 +664,7 @@ namespace HeraVM {
     }
   }
 
-  void EthereumInterface::storeMemory(const uint8_t *src, uint32_t dstOffset, uint32_t length)
+  void VaporyInterface::storeMemory(const uint8_t *src, uint32_t dstOffset, uint32_t length)
   {
     heraAssert((dstOffset + length) >= dstOffset, "Out of bounds (destination) memory copy.");
     heraAssert(memory.size() >= (dstOffset + length), "Out of bounds (destination) memory copy.");
@@ -677,7 +677,7 @@ namespace HeraVM {
     }
   }
 
-  void EthereumInterface::storeMemory(vector<uint8_t> const& src, uint32_t srcOffset, uint32_t dstOffset, uint32_t length)
+  void VaporyInterface::storeMemory(vector<uint8_t> const& src, uint32_t srcOffset, uint32_t dstOffset, uint32_t length)
   {
     heraAssert((srcOffset + length) >= srcOffset, "Out of bounds (source) memory copy.");
     heraAssert(src.size() >= (srcOffset + length), "Out of bounds (source) memory copy.");
@@ -696,38 +696,38 @@ namespace HeraVM {
    * Memory Op Wrapper Functions
    */
 
-  evm_uint256be EthereumInterface::loadUint256(uint32_t srcOffset)
+  vvm_uint256be VaporyInterface::loadUint256(uint32_t srcOffset)
   {
-    evm_uint256be dst = {};
+    vvm_uint256be dst = {};
     loadMemory(srcOffset, dst.bytes, 32);
     return dst;
   }
 
-  void EthereumInterface::storeUint256(evm_uint256be const& src, uint32_t dstOffset)
+  void VaporyInterface::storeUint256(vvm_uint256be const& src, uint32_t dstOffset)
   {
     storeMemory(src.bytes, dstOffset, 32);
   }
 
-  evm_address EthereumInterface::loadUint160(uint32_t srcOffset)
+  vvm_address VaporyInterface::loadUint160(uint32_t srcOffset)
   {
-    evm_address dst = {};
+    vvm_address dst = {};
     loadMemory(srcOffset, dst.bytes, 20);
     return dst;
   }
 
-  void EthereumInterface::storeUint160(evm_address const& src, uint32_t dstOffset)
+  void VaporyInterface::storeUint160(vvm_address const& src, uint32_t dstOffset)
   {
     storeMemory(src.bytes, dstOffset, 20);
   }
 
-  evm_uint256be EthereumInterface::loadUint128(uint32_t srcOffset)
+  vvm_uint256be VaporyInterface::loadUint128(uint32_t srcOffset)
   {
-    evm_uint256be dst = {};
+    vvm_uint256be dst = {};
     loadMemory(srcOffset, dst.bytes, 16);
     return dst;
   }
 
-  void EthereumInterface::storeUint128(evm_uint256be const& src, uint32_t dstOffset)
+  void VaporyInterface::storeUint128(vvm_uint256be const& src, uint32_t dstOffset)
   {
     heraAssert(!exceedsUint128(src), "Value at src cannot exceed 2^128-1");
     storeMemory(src.bytes + 16, dstOffset, 16);
@@ -736,15 +736,15 @@ namespace HeraVM {
   /*
    * Utilities
    */
-  void EthereumInterface::ensureSenderBalance(evm_uint256be const& value)
+  void VaporyInterface::ensureSenderBalance(vvm_uint256be const& value)
   {
-    evm_uint256be balance;
+    vvm_uint256be balance;
     context->fn_table->get_balance(&balance, context, &msg.destination);
     if (safeLoadUint64(balance) < safeLoadUint64(value))
       throw new OutOfGasException();
   }
 
-  uint64_t EthereumInterface::safeLoadUint64(evm_uint256be const& value)
+  uint64_t VaporyInterface::safeLoadUint64(vvm_uint256be const& value)
   {
     heraAssert(!exceedsUint64(value), "Value exceeds 64 bits.");
     uint64_t ret = 0;
@@ -755,7 +755,7 @@ namespace HeraVM {
     return ret;
   }
 
-  bool EthereumInterface::exceedsUint64(evm_uint256be const& value)
+  bool VaporyInterface::exceedsUint64(vvm_uint256be const& value)
   {
     for (unsigned i = 0; i < 24; i++) {
       if (value.bytes[i])
@@ -764,7 +764,7 @@ namespace HeraVM {
     return false;
   }
 
-  bool EthereumInterface::exceedsUint128(evm_uint256be const& value)
+  bool VaporyInterface::exceedsUint128(vvm_uint256be const& value)
   {
     for (unsigned i = 0; i < 16; i++) {
       if (value.bytes[i])
@@ -773,7 +773,7 @@ namespace HeraVM {
     return false;
   }
 
-  bool EthereumInterface::isZeroUint256(evm_uint256be const& value)
+  bool VaporyInterface::isZeroUint256(vvm_uint256be const& value)
   {
     for (unsigned i = 0; i < 32; i++) {
       if (value.bytes[i] != 0)
